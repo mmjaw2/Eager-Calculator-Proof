@@ -88,7 +88,7 @@ Fixpoint EagerEval (expr : Expression): Expression :=
 				| (Val a, Val b) 			=> Val (a+b)
 				| (Add (Val a) (Var b), Val c)		=> Add (Var b) (Val (a+c))
 				| (Add (Var a) (Val b), Val c)		=> Add (Var a) (Val (b+c))
-				|	(Val a, Add (Val b) (Var c))	=> Add (Var c) (Val (a+b))
+				| (Val a, Add (Val b) (Var c))		=> Add (Var c) (Val (a+b))
 				| (Val a, Add (Var b) (Val c))		=> Add (Var b) (Val (a+c))
 				| (Val a, _)				=> Add y (Val a)
 				| (_, Val b)				=> Add x (Val b)
@@ -112,7 +112,7 @@ Fixpoint EagerEval (expr : Expression): Expression :=
 				end
 	| Divide x y	=>	match (EagerEval x, EagerEval y) with
 				| (Val a, Val b)	=> Val (a/b)
-				| (_,_)						=> Divide x y
+				| (_,_)			=> Divide x y
 				end
 	end.
 ```
