@@ -40,10 +40,10 @@ Below is the expression system source code. It holds basic capabilities of makin
 Inductive Expression :=
 	| Val(x : R) : Expression
 	| Var(s : string) : Expression
-	|	Add(x y : Expression) : Expression
-	|	Subtract(x y : Expression) : Expression
-	|	Multiply(x y : Expression) : Expression
-	|	Divide(x y : Expression) : Expression.
+	| Add(x y : Expression) : Expression
+	| Subtract(x y : Expression) : Expression
+	| Multiply(x y : Expression) : Expression
+	| Divide(x y : Expression) : Expression.
 ```
 
 ## Input System
@@ -56,7 +56,7 @@ Record Input := {
 
 Fixpoint GetInput (nameInput : string) (inputs : list Input): R :=
 	match inputs with
-	| nil			=> 0%R
+	| nil		=> 0%R
 	| h :: t	=> if (String.eqb nameInput (name h)) then value h else GetInput nameInput t
 	end.
 ```
@@ -68,12 +68,12 @@ This is pretty simple, it takes an expression and a list of inputs, substitutes 
 ```Coq
 Fixpoint Eval (expr : Expression) (inputs : list Input): R :=
 	match expr with
-	| Val x					=> x
-	| Var x					=> GetInput x inputs
-	| Add x y 			=> r_Add (Eval x inputs) (Eval y inputs)
+	| Val x		=> x
+	| Var x		=> GetInput x inputs
+	| Add x y 	=> r_Add (Eval x inputs) (Eval y inputs)
 	| Subtract x y	=> r_Subtract (Eval x inputs) (Eval y inputs)
 	| Multiply x y	=> r_Multiply (Eval x inputs) (Eval y inputs)
-	| Divide x y		=> r_Divide (Eval x inputs) (Eval y inputs)
+	| Divide x y	=> r_Divide (Eval x inputs) (Eval y inputs)
 	end.
 ```
 
@@ -82,38 +82,38 @@ This is the meat and potatoes of this project. In contrast to the normal eval, e
 ```Coq
 Fixpoint EagerEval (expr : Expression): Expression :=
 	match expr with
-	| Val x					=> 	Val x
-	|	Var x					=> 	Var x
-	| Add x y 			=> 	match (EagerEval x, EagerEval y) with
-											| (Val a, Val b) 									=> Val (a+b)
-											| (Add (Val a) (Var b), Val c)		=> Add (Var b) (Val (a+c))
-											| (Add (Var a) (Val b), Val c)		=> Add (Var a) (Val (b+c))
-											|	(Val a, Add (Val b) (Var c))		=> Add (Var c) (Val (a+b))
-											| (Val a, Add (Var b) (Val c))		=> Add (Var b) (Val (a+c))
-											| (Val a, _)											=> Add y (Val a)
-											| (_, Val b)											=> Add x (Val b)
-											| (Var a, Var b)									=> if (IsEarlier a b) then Add (Var a) (Var b) else Add (Var b) (Var a)
-											| (_,_)														=> Add x y
-											end
+	| Val x		=> 	Val x
+	| Var x		=> 	Var x
+	| Add x y 	=> 	match (EagerEval x, EagerEval y) with
+				| (Val a, Val b) 			=> Val (a+b)
+				| (Add (Val a) (Var b), Val c)		=> Add (Var b) (Val (a+c))
+				| (Add (Var a) (Val b), Val c)		=> Add (Var a) (Val (b+c))
+				|	(Val a, Add (Val b) (Var c))	=> Add (Var c) (Val (a+b))
+				| (Val a, Add (Var b) (Val c))		=> Add (Var b) (Val (a+c))
+				| (Val a, _)				=> Add y (Val a)
+				| (_, Val b)				=> Add x (Val b)
+				| (Var a, Var b)			=> if (IsEarlier a b) then Add (Var a) (Var b) else Add (Var b) (Var a)
+				| (_,_)					=> Add x y
+				end
 	| Subtract x y	=> 	match (EagerEval x, EagerEval y) with
-											| (Val a, Val b)	=> Val (a-b)
-											|	(_, _)					=> Subtract x y
-											end
+				| (Val a, Val b)	=> Val (a-b)
+				| (_, _)		=> Subtract x y
+				end
 	| Multiply x y	=>	match (EagerEval x, EagerEval y) with
-											| (Val a, Val b)											=> Val (a*b)
-											| (Multiply (Val a) (Var b), Val c)		=> Multiply (Var b) (Val (a*c))
-											| (Multiply (Var a) (Val b), Val c)		=> Multiply (Var a) (Val (b*c))
-											|	(Val a, Multiply (Val b) (Var c))		=> Multiply (Var c) (Val (a*b))
-											| (Val a, Multiply (Var b) (Val c))		=> Multiply (Var b) (Val (a*c))
-											| (Val a, _)													=> Multiply y (Val a)
-											| (_, Val b)													=> Multiply x (Val b)
-											| (Var a, Var b)											=> if (IsEarlier a b) then Multiply (Var a) (Var b) else Multiply (Var b) (Var a)
-											| (_,_)																=> Multiply x y
-											end
-	| Divide x y		=>	match (EagerEval x, EagerEval y) with
-											| (Val a, Val b)	=> Val (a/b)
-											| (_,_)						=> Divide x y
-											end
+				| (Val a, Val b)			=> Val (a*b)
+				| (Multiply (Val a) (Var b), Val c)	=> Multiply (Var b) (Val (a*c))
+				| (Multiply (Var a) (Val b), Val c)	=> Multiply (Var a) (Val (b*c))
+				| (Val a, Multiply (Val b) (Var c))	=> Multiply (Var c) (Val (a*b))
+				| (Val a, Multiply (Var b) (Val c))	=> Multiply (Var b) (Val (a*c))
+				| (Val a, _)				=> Multiply y (Val a)
+				| (_, Val b)				=> Multiply x (Val b)
+				| (Var a, Var b)			=> if (IsEarlier a b) then Multiply (Var a) (Var b) else Multiply (Var b) (Var a)
+				| (_,_)					=> Multiply x y
+				end
+	| Divide x y	=>	match (EagerEval x, EagerEval y) with
+				| (Val a, Val b)	=> Val (a/b)
+				| (_,_)						=> Divide x y
+				end
 	end.
 ```
 
